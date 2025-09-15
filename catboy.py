@@ -22,11 +22,11 @@ from ..inline.types import InlineQuery
 
 
 async def photo() -> str:
-    # e926 API, фильтр: feline male -female -femboy + только safe
+    # e926 API: ищем именно catboys
     params = {
-        "tags": "feline male -female -femboy rating:safe",
+        "tags": "feline humanoid male -female -feral rating:safe",
         "limit": 100,
-        "page": random.randint(1, 50),  # рандом по страницам
+        "page": random.randint(1, 50),
     }
     data = (
         await utils.run_sync(
