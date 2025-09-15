@@ -14,6 +14,7 @@
 # scope: hikka_min 1.3.0
 
 import requests
+import random
 from telethon.tl.types import Message
 
 from .. import loader, utils
@@ -21,12 +22,27 @@ from ..inline.types import InlineQuery
 
 
 async def photo() -> str:
-    return (
+    # e926 API, фильтр: feline male -female -femboy + только safe
+    params = {
+        "tags": "feline male -female -femboy rating:safe",
+        "limit": 100,
+        "page": random.randint(1, 50),  # рандом по страницам
+    }
+    data = (
         await utils.run_sync(
             requests.get,
-            "https://api.catboys.com/img",
+            "https://e926.net/posts.json",
+            params=params,
+            headers={"User-Agent": "HikkaCatboyMod/1.0"},
         )
-    ).json()["url"]
+    ).json()
+
+    posts = data.get("posts", [])
+    if not posts:
+        return "https://static.dan.tatar/catboy_icon.png"
+
+    post = random.choice(posts)
+    return post["file"]["url"]
 
 
 @loader.tds
