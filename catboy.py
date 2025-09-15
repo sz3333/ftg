@@ -20,9 +20,13 @@ from telethon.tl.types import Message
 from .. import loader, utils
 from ..inline.types import InlineQuery
 
+# список для хранения последних урлов
+_seen_urls = []
+
 
 async def photo() -> str:
-    # e926 API: ищем именно catboys
+    global _seen_urls
+
     params = {
         "tags": "feline humanoid male -female -feral rating:safe",
         "limit": 100,
@@ -33,7 +37,7 @@ async def photo() -> str:
             requests.get,
             "https://e926.net/posts.json",
             params=params,
-            headers={"User-Agent": "HikkaCatboyMod/1.0"},
+            headers={"User-Agent": "HikkaCatboyMod/1.1"},
         )
     ).json()
 
@@ -41,8 +45,29 @@ async def photo() -> str:
     if not posts:
         return "https://static.dan.tatar/catboy_icon.png"
 
-    post = random.choice(posts)
-    return post["file"]["url"]
+    # выбираем пост, которого ещё нет в кэше
+    tries = 0
+    post = None
+    while tries < 10:  # максимум 10 попыток
+        candidate = random.choice(posts)
+        url = candidate["file"]["url"]
+        if url not in _seen_urls:
+            post = candidate
+            break
+        tries += 1
+
+    if not post:
+        # если всё равно повторилось — берём что есть
+        post = random.choice(posts)
+
+    url = post["file"]["url"]
+
+    # обновляем список последних урлов
+    _seen_urls.append(url)
+    if len(_seen_urls) > 20:  # храним только 20 последних
+        _seen_urls.pop(0)
+
+    return url
 
 
 @loader.tds
